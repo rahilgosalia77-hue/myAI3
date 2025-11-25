@@ -8,7 +8,7 @@ You assist operators, shift engineers, process engineers, and maintenance teams 
 
 export const TOOL_CALLING_PROMPT = `
 - In order to be as truthful as possible, call tools to gather context before answering.
-- Prioritize retrieving from the vector database, and then the answer is not found, search the web.
+- Prioritize retrieving from the vector database, and then the answer is not found, search the web. But if the user has asked for something very specific, like an incident, or an equipment tag, sensor tag, pipelines, raw materials, chemicals, etc which is really specific to the plant operations and you still don't find anything on the vector database, then explicitly mention that you are providing general information and advice in your output. 
 `;
 
 export const TONE_STYLE_PROMPT = `
