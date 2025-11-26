@@ -216,13 +216,13 @@ export default function Chat() {
   type="file"
   accept=".pdf,.png,.jpg,.jpeg,.txt,.csv,.xlsx"
   className="hidden"
-  onChange={async (e) => {
+  onChange={(e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) { // 10 MB limit (adjust as needed)
-      toast.error("File too large. Please upload files under 10 MB.");
-      e.currentTarget.value = "";
+    if (file.size > 10 * 1024 * 1024) { // 10 MB limit
+      toast.error("File too large (max 10MB)");
+      e.target.value = "";
       return;
     }
 
@@ -230,25 +230,24 @@ export default function Chat() {
     reader.onload = () => {
       const base64 = reader.result as string;
 
-      // sendMessage with a small prompt + file payload in data
-      // Your backend (API) can detect message.data.fileContent and handle it
+      // <-- IMPORTANT: use `metadata` (not `data`) to avoid TypeScript errors
       sendMessage({
-        text: `I uploaded a file named "${file.name}". Please analyze it and summarize important points.`,
-        data: {
+        text: `I uploaded a file named "${file.name}". Please analyze it.`,
+        metadata: {
           fileName: file.name,
           fileType: file.type,
           fileSize: file.size,
-          fileContent: base64, // base64 encoded content
+          fileContent: base64,
         },
       });
 
       toast.success(`Uploaded ${file.name}`);
-      // clear input
-      e.currentTarget.value = "";
+      e.target.value = "";
     };
+
     reader.onerror = () => {
       toast.error("Failed to read file.");
-      e.currentTarget.value = "";
+      e.target.value = "";
     };
 
     reader.readAsDataURL(file);
