@@ -204,16 +204,18 @@ export default function Chat() {
                           <Input
                             {...field}
                             id="chat-form-message"
-                            className="h-15 pr-15 pl-5
+                            className={
+    `h-15 pr-15 pl-5
     rounded-[20px]
     bg-[#92b2f5]            /* dark blue box */
     text-white              /* white text */
-    placeholder-white/60    /* softer white placeholder */
-    border border-[#0A3D91] /* border same as box */
+    placeholder-white       /* white placeholder text */
+    border border-[#92b2f5] /* outline same as background */
     focus:outline-none
-    focus:ring-2 focus:ring-blue-300/40 /* nice highlight */
-    shadow-sm"
-                            placeholder="Type your message here..."
+    focus:ring-2 focus:ring-[#92b2f5]/40 /* ring same color as box */
+    shadow-sm`
+                            }
+                            placeholder="type your message here"
                             disabled={status === "streaming"}
                             aria-invalid={fieldState.invalid}
                             autoComplete="off"
@@ -226,7 +228,7 @@ export default function Chat() {
                           />
                           {(status == "ready" || status == "error") && (
                             <Button
-                              className="absolute right-3 top-3 rounded-full"
+                              className="absolute right-3 top-3 rounded-full bg-[#0A3D91] text-white hover:bg-[#08306f] disabled:opacity-50 disabled:cursor-not-allowed"
                               type="submit"
                               disabled={!field.value.trim()}
                               size="icon"
@@ -236,7 +238,7 @@ export default function Chat() {
                           )}
                           {(status == "streaming" || status == "submitted") && (
                             <Button
-                              className="absolute right-2 top-2 rounded-full"
+                              className="absolute right-2 top-2 rounded-full bg-[#0A3D91] text-white hover:bg-[#08306f]"
                               size="icon"
                               onClick={() => {
                                 stop();
@@ -254,7 +256,7 @@ export default function Chat() {
             </div>
           </div>
           <div className="w-full px-5 py-3 items-center flex justify-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} {OWNER_NAME}&nbsp;<Link href="/terms" className="underline">Terms of Use</Link>&nbsp;Powered by&nbsp;<Link href="https://ringel.ai/" className="underline">Ringel.AI</Link>
+            © {new Date().getFullYear()} {OWNER_NAME}&nbsp;<Link href="/terms" className="underline">Terms of Use</Link>&nbsp;Powered by&nbsp;<Link href="https://ringel.ai/" className="underline">Rin[...]
           </div>
         </div>
       </main>
