@@ -45,12 +45,20 @@
 
 :root {
   --radius: 0.625rem;
-  --background: #D4D4D4;
+
+  /* glossy white background for light mode */
+  --background: #ffffff;
+
+  /* keep foreground as before */
   --foreground: oklch(0.145 0 0);
+
+  /* keep card/popover defaults (you can change these later) */
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
+
+  /* keep other variables unchanged (feel free to adjust) */
   --primary: oklch(0.1 0 0);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
@@ -79,6 +87,7 @@
 }
 
 .dark {
+  /* dark theme variables left as you had them */
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -116,13 +125,22 @@
   * {
     @apply border-border outline-ring/50;
   }
+
+  /* glossy white background using a subtle gradient and shine */
   body {
-  color: var(--foreground);          /* keep text readable */;
+    color: var(--foreground);
+    background: linear-gradient(
+      to bottom,
+      #ffffff 0%,
+      #ffffff 40%,
+      #f7f7fa 60%,
+      #ececf1 100%
+    );
+    /* optional soft vignette on the bottom for depth */
+    background-repeat: no-repeat;
+    background-attachment: fixed;
   }
 
-  background-color: rgba(245, 250, 255, 0.85);
-background-blend-mode: overlay;
-  
   .single-char-link {
     @apply bg-card text-card-foreground px-2 py-1 rounded-full hover:underline hover:scale-105 transition-all duration-100 !text-foreground !no-underline border-input border;
   }
