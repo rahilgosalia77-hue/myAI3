@@ -14,7 +14,7 @@ export function UserMessage({ message }: { message: UIMessage }) {
             break-words
             whitespace-pre-wrap
             shadow-sm
-          "">
+          ">
                     {message.parts.map((part, i) => {
                         switch (part.type) {
                             case "text":
