@@ -162,10 +162,69 @@ export async function POST(req: Request) {
       // ---- placeholder analysis function ----
       // Replace this with real image analysis (Vision API, OCR, etc)
       async function analyzeImageBuffer(buf: Buffer, filename: string, mimeType: string) {
-        // Example placeholder result - replace with calls to your vision/OCR API
-        return `I examined "${filename}". (Placeholder analysis) I can detect edges, count objects, or run OCR. Replace this with real vision/ocr results.`;
-      }
-      // ----------------------------------------
+        // ---- OpenAI Vision analysis function ----
+async function analyzeImageBuffer(buf: Buffer, filename: string, mimeType: string) {
+  if (!process.env.OPENAI_API_KEY) {
+    console.error('Missing OPENAI_API_KEY');
+    return `Cannot analyze "${filename}" because OpenAI credentials are missing.`;
+  }
+
+  try {
+    const base64 = buf.toString('base64');
+
+    const promptText = `Extract all text (OCR) from the image. Then give a 2-line summary. Return JSON with keys: ocr_text, summary.`;
+
+    const resp = await fetch('https://api.openai.com/v1/responses', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: process.env.OPENAI_VISION_MODEL || 'gpt-4o-mini-vision',
+        input: [
+          {
+            role: 'user',
+            content: [
+              { type: 'input_text', text: promptText },
+              { type: 'input_image', image_base64: base64, mime_type: mimeType, filename }
+            ]
+          }
+        ],
+        max_output_tokens: 800,
+        temperature: 0
+      })
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      console.error('OpenAI error:', resp.status, errText);
+      return `OpenAI error while analyzing "${filename}": ${errText}`;
+    }
+
+    const j = await resp.json();
+
+    let combinedText = '';
+
+    // Try to read output from Responses API
+    if (j?.output?.[0]?.content) {
+      combinedText = j.output[0].content
+        .map((c: any) => c.text || c.description || '')
+        .filter(Boolean)
+        .join('\n');
+    }
+
+    if (!combinedText) {
+      combinedText = j.output_text || JSON.stringify(j);
+    }
+
+    return `OpenAI analysis for "${filename}":\n\n${combinedText}`;
+  } catch (err) {
+    console.error('Vision analysis failed:', err);
+    return `Failed to analyze "${filename}": ${String(err)}`;
+  }
+}
+// -----------------------------------------
 
       const analysisText = await analyzeImageBuffer(buffer, fileName, mime);
 
