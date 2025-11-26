@@ -226,7 +226,7 @@ export default function Chat() {
                           />
                           {(status == "ready" || status == "error") && (
                             <Button
-                              className="absolute right-3 top-3 rounded-full bg-[#0A3D91] text-white hover:bg-[#082b6f]"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-[#0A3D91] text-white hover:bg-[#082b6f]"
                               type="submit"
                               disabled={!field.value.trim()}
                               size="icon"
@@ -236,7 +236,7 @@ export default function Chat() {
                           )}
                           {(status == "streaming" || status == "submitted") && (
                             <Button
-                              className="absolute right-2 top-2 rounded-full"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full"
                               size="icon"
                               onClick={() => {
                                 stop();
