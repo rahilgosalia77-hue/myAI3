@@ -189,7 +189,7 @@ export default function Chat() {
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-linear-to-t from-background via-background/50 to-transparent dark:bg-black overflow-visible pt-13">
           <div className="w-full px-5 pt-5 pb-1 items-center flex justify-center relative overflow-visible">
             <div className="message-fade-overlay" />
-            <div className="max-w-3xl w-full">
+            <div className="max-w-5xl w-full">
               <form id="chat-form" onSubmit={form.handleSubmit(onSubmit)}>
                 <FieldGroup>
                   <Controller
@@ -204,7 +204,7 @@ export default function Chat() {
                           <Input
                             {...field}
                             id="chat-form-message"
-                            className="h-15 pr-15 pl-5
+                            className="h-13 pr-15 pl-5
     rounded-[20px]
     bg-[#e1e8f7]            
     text-black              /* white text */
