@@ -3,9 +3,18 @@ import { Response } from "@/components/ai-elements/response";
 
 export function UserMessage({ message }: { message: UIMessage }) {
     return (
-        <div className="whitespace-pre-wrap w-full flex justify-end">
-            <div className="max-w-lg w-fit px-4 py-3 rounded-[20px] bg-neutral-100">
-                <div className="text-sm">
+        <div className="flex w-full">
+      <div className="ml-auto max-w-[80%]">
+        <div
+          className="
+            px-4 py-3
+            rounded-2xl
+            bg-[#0A3D91]        /* dark blue bubble */
+            text-white         /* white message text */
+            break-words
+            whitespace-pre-wrap
+            shadow-sm
+          "">
                     {message.parts.map((part, i) => {
                         switch (part.type) {
                             case "text":
