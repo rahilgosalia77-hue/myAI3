@@ -206,8 +206,8 @@ export default function Chat() {
                             id="chat-form-message"
                             className="h-15 pr-15 pl-5
     rounded-[20px]
-    bg-[#95B2F5]            
-    text-white              /* white text */
+    bg-[#e1e8f7]            
+    text-black              /* white text */
     placeholder-white/60    /* softer white placeholder */
     border border-[#0A3D91] /* border same as box */
     focus:outline-none
@@ -226,7 +226,7 @@ export default function Chat() {
                           />
                           {(status == "ready" || status == "error") && (
                             <Button
-                              className="absolute right-3 top-3 rounded-full"
+                              className="absolute right-3 top-3 rounded-full bg-[#0A3D91] text-white hover:bg-[#082b6f]"
                               type="submit"
                               disabled={!field.value.trim()}
                               size="icon"
