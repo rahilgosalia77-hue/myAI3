@@ -117,8 +117,16 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    background-image: url("/factory-bg.png");
+  background-size: cover;            /* fill screen */
+  background-position: center;       /* center the plant */
+  background-repeat: no-repeat;      /* no tiling */
+  background-attachment: fixed;      /* parallax effect (nice) */
+  color: var(--foreground);          /* keep text readable *;
   }
+
+  background-color: rgba(245, 250, 255, 0.85);
+background-blend-mode: overlay;
   
   .single-char-link {
     @apply bg-card text-card-foreground px-2 py-1 rounded-full hover:underline hover:scale-105 transition-all duration-100 !text-foreground !no-underline border-input border;
