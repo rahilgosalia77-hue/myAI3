@@ -100,7 +100,7 @@ export default function Chat() {
   useEffect(() => {
     if (isClient && initialMessages.length === 0 && !welcomeMessageShownRef.current) {
       const welcomeMessage: UIMessage = {
-        id: welcome-${Date.now()},
+        id: `welcome-${Date.now()}`,
         role: "assistant",
         parts: [
           {
