@@ -205,7 +205,7 @@ export default function Chat() {
                           {/* File Upload Button (left of input) */}
 <label
   htmlFor="file-upload"
-  className="absolute left-3 top-1/2 -translate-y-1/2 cursor-pointer p-1 rounded-full hover:bg-gray-200/30"
+  className="absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer p-1 rounded-full hover:bg-gray-200/30 z-10"
   title="Upload a file"
 >
   <Paperclip className="w-5 h-5 text-gray-600" />
@@ -256,7 +256,7 @@ export default function Chat() {
                           <Input
                             {...field}
                             id="chat-form-message"
-                            className="h-13 pr-15 pl-5
+                            className="h-13 pr-15 pl-14
     rounded-[20px]
     bg-[#e1e8f7]            
     text-black              /* white text */
