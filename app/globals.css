@@ -122,7 +122,7 @@
 
     /* gradient from very light grey -> light blue (light mode) */
     /* adjust these hex values if you want different tinting */
-    background-image: linear-gradient(180deg, #f6f7f8 0%, #d9eef8 100%);
+    background-image: linear-gradient(180deg, #f6f7f8 0%, #81d5fc 100%);
     background-repeat: no-repeat;
     background-attachment: fixed;
     background-size: cover;
