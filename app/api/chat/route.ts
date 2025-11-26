@@ -60,6 +60,55 @@ export async function POST(req: Request) {
     }
 
     const result = streamText({
+        // --- File upload detection / acknowledgement ---
+// If the user uploaded a file, it will be present in message.metadata.fileContent
+// Look for the most recent message that has metadata.fileContent
+const fileMessage = messages.slice().reverse().find((m) => (m as any).metadata && (m as any).metadata.fileContent);
+
+if (fileMessage) {
+  const meta = (fileMessage as any).metadata;
+  // meta.fileContent looks like "data:<mime>;base64,<base64data>"
+  // Extract optional values:
+  const fileName = meta.fileName || "uploaded-file";
+  const mime = meta.fileType || "unknown";
+  const sizeKB = meta.fileSize ? Math.round(meta.fileSize / 1024) : "unknown";
+
+  // If you later want to process the file (OCR, vision, save), decode like this:
+  // const base64WithPrefix: string = meta.fileContent;
+  // const base64 = base64WithPrefix.split(",")[1];
+  // const buffer = Buffer.from(base64, "base64");
+  // ... process `buffer` as needed
+
+  // Return an immediate assistant response acknowledging receipt
+  const stream = createUIMessageStream({
+    execute({ writer }) {
+      const textId = "file-received-text";
+      writer.write({ type: "start" });
+
+      writer.write({
+        type: "text-start",
+        id: textId,
+      });
+
+      writer.write({
+        type: "text-delta",
+        id: textId,
+        delta: `Received "${fileName}" (${sizeKB} KB, ${mime}). I can (1) summarize text, (2) run OCR, (3) analyze images, or (4) extract tables. What would you like me to do with this file?`,
+      });
+
+      writer.write({
+        type: "text-end",
+        id: textId,
+      });
+
+      writer.write({
+        type: "finish",
+      });
+    },
+  });
+
+  return createUIMessageStreamResponse({ stream });
+}
         model: MODEL,
         system: SYSTEM_PROMPT,
         messages: convertToModelMessages(messages),
