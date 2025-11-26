@@ -1,5 +1,6 @@
 "use client";
 
+import { Paperclip } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -201,6 +202,58 @@ export default function Chat() {
                           Message
                         </FieldLabel>
                         <div className="relative h-13">
+                          {/* File Upload Button (left of input) */}
+<label
+  htmlFor="file-upload"
+  className="absolute left-3 top-1/2 -translate-y-1/2 cursor-pointer p-1 rounded-full hover:bg-gray-200/30"
+  title="Upload a file"
+>
+  <Paperclip className="w-5 h-5 text-gray-600" />
+</label>
+
+<input
+  id="file-upload"
+  type="file"
+  accept=".pdf,.png,.jpg,.jpeg,.txt,.csv,.xlsx"
+  className="hidden"
+  onChange={async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) { // 10 MB limit (adjust as needed)
+      toast.error("File too large. Please upload files under 10 MB.");
+      e.currentTarget.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+
+      // sendMessage with a small prompt + file payload in data
+      // Your backend (API) can detect message.data.fileContent and handle it
+      sendMessage({
+        text: `I uploaded a file named "${file.name}". Please analyze it and summarize important points.`,
+        data: {
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+          fileContent: base64, // base64 encoded content
+        },
+      });
+
+      toast.success(`Uploaded ${file.name}`);
+      // clear input
+      e.currentTarget.value = "";
+    };
+    reader.onerror = () => {
+      toast.error("Failed to read file.");
+      e.currentTarget.value = "";
+    };
+
+    reader.readAsDataURL(file);
+  }}
+/>
                           <Input
                             {...field}
                             id="chat-form-message"
