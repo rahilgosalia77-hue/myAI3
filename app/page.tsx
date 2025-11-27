@@ -25,6 +25,9 @@ import { AI_NAME, CLEAR_CHAT_TEXT, OWNER_NAME, WELCOME_MESSAGE } from "@/config"
 import Image from "next/image";
 import Link from "next/link";
 
+// NEW: import QuickSidebar
+import QuickSidebar from "@/app/components/QuickSidebar";
+
 const formSchema = z.object({
   message: z
     .string()
@@ -137,9 +140,22 @@ export default function Chat() {
     toast.success("Chat cleared");
   }
 
+  // NEW: Handle quick action clicks from sidebar
+  function handleQuickAction(text: string) {
+    // This will behave the same as user typing and sending the text
+    sendMessage({ text });
+  }
+
   return (
-    <div className="flex h-screen items-center justify-center font-sans dark:bg-black">
-      <main className="w-full dark:bg-black h-screen relative">
+    // Note: removed items-center justify-center on root so sidebar + main align correctly
+    <div className="flex h-screen font-sans dark:bg-black">
+
+      {/* LEFT: Quick action bar (fixed) */}
+      <QuickSidebar onAction={handleQuickAction} />
+
+      {/* RIGHT: main chat content — add left margin so content isn't behind the fixed sidebar */}
+      <main className="flex-1 ml-28 items-center justify-center relative">
+
         <div className="fixed top-0 left-0 right-0 z-50 bg-linear-to-b from-background via-background/50 to-transparent dark:bg-black overflow-visible pb-16">
           <div className="relative overflow-visible">
             <ChatHeader>
@@ -169,6 +185,7 @@ export default function Chat() {
             </ChatHeader>
           </div>
         </div>
+
         <div className="h-screen overflow-y-auto px-5 py-4 w-full pt-[88px] pb-[150px]">
           <div className="flex flex-col items-center justify-end min-h-full">
             {isClient ? (
@@ -187,6 +204,7 @@ export default function Chat() {
             )}
           </div>
         </div>
+
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-linear-to-t from-background via-background/50 to-transparent dark:bg-black overflow-visible pt-13">
           <div className="w-full px-5 pt-5 pb-1 items-center flex justify-center relative overflow-visible">
             <div className="message-fade-overlay" />
