@@ -23,9 +23,8 @@ import { AI_NAME, CLEAR_CHAT_TEXT, OWNER_NAME, WELCOME_MESSAGE } from "@/config"
 import Image from "next/image";
 import Link from "next/link";
 
-/// ⭐ Correct import — matches your file location
+/// QuickSidebar import (adjust if yours is in a different location)
 import QuickSidebar from "@/app/QuickSidebar";
-
 
 /* -------------------- Zod Schema -------------------- */
 
@@ -36,10 +35,9 @@ const formSchema = z.object({
     .max(2000, "Message must be at most 2000 characters."),
 });
 
-
 /* -------------------- Local Storage -------------------- */
 
-const STORAGE_KEY = 'chat-messages';
+const STORAGE_KEY = "chat-messages";
 
 type StorageData = {
   messages: UIMessage[];
@@ -61,7 +59,6 @@ const saveMessagesToStorage = (messages: UIMessage[], durations: Record<string, 
   if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ messages, durations }));
 };
-
 
 /* -------------------- Chat Component -------------------- */
 
@@ -91,15 +88,10 @@ export default function Chat() {
     setDurations(prev => ({ ...prev, [key]: duration }));
   };
 
-
   /* ------ Welcome Message Injection ------ */
 
   useEffect(() => {
-    if (
-      isClient &&
-      initialMessages.length === 0 &&
-      !welcomeMessageShownRef.current
-    ) {
+    if (isClient && initialMessages.length === 0 && !welcomeMessageShownRef.current) {
       const welcome: UIMessage = {
         id: `welcome-${Date.now()}`,
         role: "assistant",
@@ -110,7 +102,6 @@ export default function Chat() {
       welcomeMessageShownRef.current = true;
     }
   }, [isClient, initialMessages.length, setMessages]);
-
 
   /* -------- Form Handling -------- */
 
@@ -137,6 +128,20 @@ export default function Chat() {
     sendMessage({ text });
   }
 
+  /* ---------- Hero (centered) state ---------- */
+  // show hero when there is no user message yet
+  const hasUserMessage = messages.some((m) => m.role === "user");
+  const showHero = !hasUserMessage;
+
+  // local hero input state
+  const [heroInput, setHeroInput] = useState("");
+
+  function submitHeroInput() {
+    const t = heroInput.trim();
+    if (!t) return;
+    sendMessage({ text: t });
+    setHeroInput("");
+  }
 
   /* -------------------- UI Layout -------------------- */
 
@@ -147,7 +152,7 @@ export default function Chat() {
       <QuickSidebar onAction={handleQuickAction} />
 
       {/* MAIN CHAT */}
-      <main className="flex-1 ml-28 relative">
+      <main className="flex-1 ml-28 relative min-h-screen flex flex-col">
 
         {/* HEADER */}
         <div className="fixed top-0 left-28 right-0 z-50 bg-linear-to-b from-background via-background/50 to-transparent dark:bg-black pb-16">
@@ -175,15 +180,100 @@ export default function Chat() {
                 {CLEAR_CHAT_TEXT}
               </Button>
             </ChatHeaderBlock>
-
           </ChatHeader>
         </div>
 
+        {/* ===== HERO (centered prompt) ===== */}
+        {showHero && (
+          <div className="flex-1 pt-[120px] pb-6">
+            <div className="max-w-4xl mx-auto px-6">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-center mb-8 text-gray-900">
+                What’s on your mind today?
+              </h1>
 
-        {/* MESSAGES */}
-        <div className="h-screen overflow-y-auto px-5 py-4 w-full pt-[88px] pb-[150px]">
+              <div className="flex items-center justify-center">
+                <div className="w-full">
+                  {/* Big rounded input — when submitted, sends message */}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      submitHeroInput();
+                    }}
+                  >
+                    <div className="flex items-center bg-white border border-gray-200 rounded-full shadow-sm px-4 py-3">
+                      <button
+                        type="button"
+                        className="mr-4 text-xl text-gray-500"
+                        onClick={() => {
+                          // optional: could open attachments — keep it simple
+                        }}
+                        aria-hidden
+                      >
+                        +
+                      </button>
+
+                      <input
+                        value={heroInput}
+                        onChange={(e) => setHeroInput(e.target.value)}
+                        placeholder="Ask anything"
+                        className="flex-1 text-lg md:text-xl placeholder-gray-400 focus:outline-none"
+                        aria-label="Hero query"
+                      />
+
+                      <button
+                        type="submit"
+                        className="ml-4 rounded-full bg-black text-white w-12 h-12 flex items-center justify-center hover:opacity-95"
+                        title="Ask"
+                      >
+                        {/* simple arrow icon */}
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                          <path d="M4 12l16-8v16z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </form>
+
+                  {/* suggestion chips below the hero input */}
+                  <div className="mt-4 flex items-center justify-center gap-3 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        sendMessage({ text: "Explain the P&ID overview document and identify key equipment." })
+                      }
+                      className="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
+                    >
+                      Explain P&ID
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        sendMessage({ text: "Generate a concise SOP for the main equipment." })
+                      }
+                      className="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
+                    >
+                      Generate SOP
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        sendMessage({ text: "Summarize an incident and list root causes." })
+                      }
+                      className="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
+                    >
+                      Safety Analysis
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===== Messages area (below hero or if hero hidden) ===== */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 w-full pt-[88px] pb-[150px]">
           <div className="flex flex-col items-center justify-end min-h-full">
-
             {isClient ? (
               <>
                 <MessageWall
@@ -200,54 +290,56 @@ export default function Chat() {
                 )}
               </>
             ) : (
-              <Loader2 className="size-4 animate-spin text-muted-foreground" />
+              <div className="flex justify-center max-w-2xl w-full">
+                <Loader2 className="size-4 animate-spin text-muted-foreground" />
+              </div>
             )}
           </div>
         </div>
-
 
         {/* INPUT BAR */}
         <div className="fixed bottom-0 left-28 right-0 z-50 bg-linear-to-t from-background via-background/50 to-transparent dark:bg-black pt-13">
           <div className="w-full px-5 pt-5 pb-1 flex justify-center relative">
             <div className="max-w-5xl w-full">
-              {/* === Suggestion banner: "What can I fix today?" === */}
-{!messages.some((m) => m.role === "user") && (
-  <div className="mb-3">
-    <div className="max-w-5xl mx-auto">
-      <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl border border-gray-200 bg-white/95 shadow-sm">
-        <div>
-          <div className="text-sm font-semibold text-gray-700">What can I fix today?</div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
-              onClick={() => sendMessage({ text: "Explain the P&ID overview document." })}
-            >
-              Explain P&ID
-            </button>
+              {/* Suggestion banner (smaller) shown when chat is fresh */}
+              {!hasUserMessage && (
+                <div className="mb-3">
+                  <div className="max-w-5xl mx-auto">
+                    <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl border border-gray-200 bg-white/95 shadow-sm">
+                      <div>
+                        <div className="text-sm font-semibold text-gray-700">What can I fix today?</div>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            className="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
+                            onClick={() => sendMessage({ text: "Explain the P&ID overview document." })}
+                          >
+                            Explain P&ID
+                          </button>
 
-            <button
-              type="button"
-              className="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
-              onClick={() => sendMessage({ text: "Provide SOP guidance for key equipment." })}
-            >
-              Generate SOP
-            </button>
+                          <button
+                            type="button"
+                            className="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
+                            onClick={() => sendMessage({ text: "Provide SOP guidance for key equipment." })}
+                          >
+                            Generate SOP
+                          </button>
 
-            <button
-              type="button"
-              className="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
-              onClick={() => sendMessage({ text: "Summarize an incident and list root causes." })}
-            >
-              Safety Analysis
-            </button>
-          </div>
-        </div>
-        <div className="text-xs text-muted-foreground">Click a suggestion to begin</div>
-      </div>
-    </div>
-  </div>
-)}
+                          <button
+                            type="button"
+                            className="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
+                            onClick={() => sendMessage({ text: "Summarize an incident and list root causes." })}
+                          >
+                            Safety Analysis
+                          </button>
+                        </div>
+                      </div>
+                      <div className="text-xs text-muted-foreground">Click a suggestion to begin</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <form id="chat-form" onSubmit={form.handleSubmit(onSubmit)}>
                 <FieldGroup>
                   <Controller
@@ -258,7 +350,6 @@ export default function Chat() {
                         <FieldLabel className="sr-only">Message</FieldLabel>
 
                         <div className="relative h-13">
-
                           {/* FILE UPLOAD */}
                           <label
                             htmlFor="file-upload"
@@ -299,7 +390,6 @@ export default function Chat() {
                             }}
                           />
 
-
                           {/* TEXT INPUT */}
                           <Input
                             {...field}
@@ -334,7 +424,6 @@ export default function Chat() {
                               <Square className="size-4" />
                             </Button>
                           )}
-
                         </div>
                       </Field>
                     )}
@@ -350,7 +439,6 @@ export default function Chat() {
             Powered by <Link href="https://ringel.ai/" className="underline">Ringel.AI</Link>
           </div>
         </div>
-
       </main>
     </div>
   );
