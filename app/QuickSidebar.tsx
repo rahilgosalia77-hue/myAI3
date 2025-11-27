@@ -1,5 +1,7 @@
 'use client';
 
+import React from "react";
+
 type Props = {
   onAction: (text: string) => void;
 };
@@ -11,30 +13,33 @@ export default function QuickSidebar({ onAction }: Props) {
         Quick Actions
       </h2>
 
-      {/* Button 1 */}
       <button
         className="quick-tile"
         onClick={() => onAction("Summarize the P&ID Overview Document.")}
+        aria-label="P&ID Overview"
+        title="P&ID Overview"
       >
-        <span className="quick-icon">📘</span>
+        <span className="quick-icon" aria-hidden>📘</span>
         <span className="quick-label">P&ID</span>
       </button>
 
-      {/* Button 2 */}
       <button
         className="quick-tile"
         onClick={() => onAction("Summarize the SOP Handbook Document.")}
+        aria-label="SOP Handbook"
+        title="SOP Handbook"
       >
-        <span className="quick-icon">🧰</span>
+        <span className="quick-icon" aria-hidden>🧰</span>
         <span className="quick-label">SOP</span>
       </button>
 
-      {/* Button 3 */}
       <button
         className="quick-tile"
         onClick={() => onAction("Summarize the Incident Case Studies Document.")}
+        aria-label="Incident Case Studies"
+        title="Incident Case Studies"
       >
-        <span className="quick-icon">⚠️</span>
+        <span className="quick-icon" aria-hidden>⚠️</span>
         <span className="quick-label">Incidents</span>
       </button>
     </aside>
