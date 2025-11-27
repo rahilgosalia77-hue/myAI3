@@ -49,9 +49,17 @@ const loadMessagesFromStorage = () => {
   }
 };
 
-const saveMessagesToStorage = (messages, durations) => {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ messages, durations }));
+const saveMessagesToStorage = (
+  messages: UIMessage[],
+  durations: Record<string, number>
+): void => {
+  if (typeof window === 'undefined') return;
+  try {
+    const data: StorageData = { messages, durations };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (error) {
+    console.error('Failed to save messages to localStorage:', error);
+  }
 };
 
 /* -------------------- Chat Component -------------------- */
