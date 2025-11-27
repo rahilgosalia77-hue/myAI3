@@ -133,16 +133,6 @@ export default function Chat() {
   const hasUserMessage = messages.some((m) => m.role === "user");
   const showHero = !hasUserMessage;
 
-  // local hero input state
-  const [heroInput, setHeroInput] = useState("");
-
-  function submitHeroInput() {
-    const t = heroInput.trim();
-    if (!t) return;
-    sendMessage({ text: t });
-    setHeroInput("");
-  }
-
   /* -------------------- UI Layout -------------------- */
 
   return (
@@ -183,90 +173,13 @@ export default function Chat() {
           </ChatHeader>
         </div>
 
-        {/* ===== HERO (centered prompt) ===== */}
+        {/* ===== HERO: only the heading (centered & bold) ===== */}
         {showHero && (
           <div className="flex-1 pt-[120px] pb-6">
             <div className="max-w-4xl mx-auto px-6">
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-center mb-8 text-gray-900">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-8 text-gray-900">
                 What’s on your mind today?
               </h1>
-
-              <div className="flex items-center justify-center">
-                <div className="w-full">
-                  {/* Big rounded input — when submitted, sends message */}
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      submitHeroInput();
-                    }}
-                  >
-                    <div className="flex items-center bg-white border border-gray-200 rounded-full shadow-sm px-4 py-3">
-                      <button
-                        type="button"
-                        className="mr-4 text-xl text-gray-500"
-                        onClick={() => {
-                          // optional: could open attachments — keep it simple
-                        }}
-                        aria-hidden
-                      >
-                        +
-                      </button>
-
-                      <input
-                        value={heroInput}
-                        onChange={(e) => setHeroInput(e.target.value)}
-                        placeholder="Ask anything"
-                        className="flex-1 text-lg md:text-xl placeholder-gray-400 focus:outline-none"
-                        aria-label="Hero query"
-                      />
-
-                      <button
-                        type="submit"
-                        className="ml-4 rounded-full bg-black text-white w-12 h-12 flex items-center justify-center hover:opacity-95"
-                        title="Ask"
-                      >
-                        {/* simple arrow icon */}
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                          <path d="M4 12l16-8v16z" />
-                        </svg>
-                      </button>
-                    </div>
-                  </form>
-
-                  {/* suggestion chips below the hero input */}
-                  <div className="mt-4 flex items-center justify-center gap-3 flex-wrap">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        sendMessage({ text: "Explain the P&ID overview document and identify key equipment." })
-                      }
-                      className="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
-                    >
-                      Explain P&ID
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        sendMessage({ text: "Generate a concise SOP for the main equipment." })
-                      }
-                      className="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
-                    >
-                      Generate SOP
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        sendMessage({ text: "Summarize an incident and list root causes." })
-                      }
-                      className="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
-                    >
-                      Safety Analysis
-                    </button>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         )}
@@ -301,7 +214,7 @@ export default function Chat() {
         <div className="fixed bottom-0 left-28 right-0 z-50 bg-linear-to-t from-background via-background/50 to-transparent dark:bg-black pt-13">
           <div className="w-full px-5 pt-5 pb-1 flex justify-center relative">
             <div className="max-w-5xl w-full">
-              {/* Suggestion banner (smaller) shown when chat is fresh */}
+              {/* Suggestion banner (small) shown when chat is fresh */}
               {!hasUserMessage && (
                 <div className="mb-3">
                   <div className="max-w-5xl mx-auto">
