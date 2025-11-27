@@ -210,6 +210,44 @@ export default function Chat() {
         <div className="fixed bottom-0 left-28 right-0 z-50 bg-linear-to-t from-background via-background/50 to-transparent dark:bg-black pt-13">
           <div className="w-full px-5 pt-5 pb-1 flex justify-center relative">
             <div className="max-w-5xl w-full">
+              {/* === Suggestion banner: "What can I fix today?" === */}
+{!messages.some((m) => m.role === "user") && (
+  <div className="mb-3">
+    <div className="max-w-5xl mx-auto">
+      <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl border border-gray-200 bg-white/95 shadow-sm">
+        <div>
+          <div className="text-sm font-semibold text-gray-700">What can I fix today?</div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
+              onClick={() => sendMessage({ text: "Explain the P&ID overview document." })}
+            >
+              Explain P&ID
+            </button>
+
+            <button
+              type="button"
+              className="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
+              onClick={() => sendMessage({ text: "Provide SOP guidance for key equipment." })}
+            >
+              Generate SOP
+            </button>
+
+            <button
+              type="button"
+              className="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
+              onClick={() => sendMessage({ text: "Summarize an incident and list root causes." })}
+            >
+              Safety Analysis
+            </button>
+          </div>
+        </div>
+        <div className="text-xs text-muted-foreground">Click a suggestion to begin</div>
+      </div>
+    </div>
+  </div>
+)}
               <form id="chat-form" onSubmit={form.handleSubmit(onSubmit)}>
                 <FieldGroup>
                   <Controller
