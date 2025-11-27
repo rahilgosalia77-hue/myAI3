@@ -10,7 +10,7 @@ export function ChatHeaderBlock({ children, className }: { children?: React.Reac
 
 export function ChatHeader({ children }: { children: React.ReactNode }) {
     return (
-        <div className="<div className="w-full flex items-center justify-between px-4 py-3 border-b bg-[#e1e8f7]">
+        <div className="<div className="w-full flex items-center justify-between px-4 py-3 border-b bg-(#e1e8f7)">
             {children}
         </div>
     )
