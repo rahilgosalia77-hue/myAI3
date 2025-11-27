@@ -39,6 +39,7 @@ export const WELCOME_MESSAGE = `Hello! I'm ${AI_NAME}, a Chemical Engineering Co
 2. Explaining P&IDs, SOPs, and equipment tags
 3. Analyzing deviations and safety concerns
 4. Supporting design changes, debottlenecking, and MOC
+
 5.Running quick engineering calculations
 
 How can I assist you today?`
