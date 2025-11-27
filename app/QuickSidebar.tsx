@@ -13,7 +13,7 @@ export default function QuickSidebar() {
         QUICK <br /> TOOLS
       </div>
 
-      {/* Steam   Tables */}
+      {/* Steam Tables */}
       <a
         href="https://pages.mtu.edu/~tbco/cm3230/steamtables.pdf"  // ⬅️ your link here
         target="_blank"
@@ -23,7 +23,7 @@ export default function QuickSidebar() {
         aria-label="Steam Tables"
       >
         <span className="quick-icon" aria-hidden>💧</span>
-        <span className="quick-label">Steam Tables</span>
+        <span className="quick-label">Steam Handbook </span>
       </a>
 
       {/* ChemEng Toolbox */}
