@@ -23,7 +23,6 @@ import { AI_NAME, CLEAR_CHAT_TEXT, OWNER_NAME, WELCOME_MESSAGE } from "@/config"
 import Image from "next/image";
 import Link from "next/link";
 
-/// QuickSidebar import (adjust if yours is in a different location)
 import QuickSidebar from "@/app/QuickSidebar";
 
 /* -------------------- Zod Schema -------------------- */
@@ -39,11 +38,6 @@ const formSchema = z.object({
 
 const STORAGE_KEY = "chat-messages";
 
-type StorageData = {
-  messages: UIMessage[];
-  durations: Record<string, number>;
-};
-
 const loadMessagesFromStorage = () => {
   if (typeof window === "undefined") return { messages: [], durations: {} };
   try {
@@ -55,7 +49,7 @@ const loadMessagesFromStorage = () => {
   }
 };
 
-const saveMessagesToStorage = (messages: UIMessage[], durations: Record<string, number>) => {
+const saveMessagesToStorage = (messages, durations) => {
   if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ messages, durations }));
 };
@@ -64,11 +58,15 @@ const saveMessagesToStorage = (messages: UIMessage[], durations: Record<string, 
 
 export default function Chat() {
   const [isClient, setIsClient] = useState(false);
-  const [durations, setDurations] = useState<Record<string, number>>({});
+  const [durations, setDurations] = useState({});
   const welcomeMessageShownRef = useRef(false);
 
-  const stored = typeof window !== "undefined" ? loadMessagesFromStorage() : { messages: [], durations: {} };
-  const [initialMessages] = useState<UIMessage[]>(stored.messages);
+  const stored =
+    typeof window !== "undefined"
+      ? loadMessagesFromStorage()
+      : { messages: [], durations: {} };
+
+  const [initialMessages] = useState(stored.messages);
 
   const { messages, sendMessage, status, stop, setMessages } = useChat({
     messages: initialMessages,
@@ -84,15 +82,18 @@ export default function Chat() {
     if (isClient) saveMessagesToStorage(messages, durations);
   }, [messages, durations, isClient]);
 
-  const handleDurationChange = (key: string, duration: number) => {
-    setDurations(prev => ({ ...prev, [key]: duration }));
+  const handleDurationChange = (key, duration) => {
+    setDurations((prev) => ({ ...prev, [key]: duration }));
   };
 
-  /* ------ Welcome Message Injection ------ */
-
+  /* ------ Welcome message injection ------ */
   useEffect(() => {
-    if (isClient && initialMessages.length === 0 && !welcomeMessageShownRef.current) {
-      const welcome: UIMessage = {
+    if (
+      isClient &&
+      initialMessages.length === 0 &&
+      !welcomeMessageShownRef.current
+    ) {
+      const welcome = {
         id: `welcome-${Date.now()}`,
         role: "assistant",
         parts: [{ type: "text", text: WELCOME_MESSAGE }],
@@ -110,7 +111,7 @@ export default function Chat() {
     defaultValues: { message: "" },
   });
 
-  function onSubmit(data: any) {
+  function onSubmit(data) {
     sendMessage({ text: data.message });
     form.reset();
   }
@@ -122,14 +123,8 @@ export default function Chat() {
     toast.success("Chat cleared");
   }
 
-  /* -------- Quick Action Handler -------- */
+  /* -------- Hero state (only title) -------- */
 
-  function handleQuickAction(text: string) {
-    sendMessage({ text });
-  }
-
-  /* ---------- Hero (centered) state ---------- */
-  // show hero when there is no user message yet
   const hasUserMessage = messages.some((m) => m.role === "user");
   const showHero = !hasUserMessage;
 
@@ -138,10 +133,8 @@ export default function Chat() {
   return (
     <div className="flex h-screen font-sans dark:bg-black">
 
-      {/* LEFT SIDEBAR */}
-      <QuickSidebar onAction={handleQuickAction} />
+      <QuickSidebar onAction={(t) => sendMessage({ text: t })} />
 
-      {/* MAIN CHAT */}
       <main className="flex-1 ml-28 relative min-h-screen flex flex-col">
 
         {/* HEADER */}
@@ -163,7 +156,6 @@ export default function Chat() {
               <Button
                 variant="outline"
                 size="sm"
-                className="cursor-pointer"
                 onClick={clearChat}
               >
                 <Plus className="size-4" />
@@ -173,18 +165,16 @@ export default function Chat() {
           </ChatHeader>
         </div>
 
-        {/* ===== HERO: only the heading (centered & bold) ===== */}
+        {/* ===== HERO (ONLY THE TITLE) ===== */}
         {showHero && (
-          <div className="flex-1 pt-[120px] pb-6">
-            <div className="max-w-4xl mx-auto px-6">
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-8 text-gray-900">
-                What’s on your mind today?
-              </h1>
-            </div>
+          <div className="pt-[160px] pb-6 text-center">
+            <h1 className="text-4xl md:text-5xl font-semibold text-gray-900">
+              What’s on your mind today?
+            </h1>
           </div>
         )}
 
-        {/* ===== Messages area (below hero or if hero hidden) ===== */}
+        {/* ===== Messages Area ===== */}
         <div className="flex-1 overflow-y-auto px-5 py-4 w-full pt-[88px] pb-[150px]">
           <div className="flex flex-col items-center justify-end min-h-full">
             {isClient ? (
@@ -197,61 +187,19 @@ export default function Chat() {
                 />
 
                 {status === "submitted" && (
-                  <div className="flex justify-start max-w-3xl w-full">
-                    <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                  </div>
+                  <Loader2 className="size-4 animate-spin text-muted-foreground" />
                 )}
               </>
             ) : (
-              <div className="flex justify-center max-w-2xl w-full">
-                <Loader2 className="size-4 animate-spin text-muted-foreground" />
-              </div>
+              <Loader2 className="size-4 animate-spin text-muted-foreground" />
             )}
           </div>
         </div>
 
-        {/* INPUT BAR */}
+        {/* ===== Input Bar ===== */}
         <div className="fixed bottom-0 left-28 right-0 z-50 bg-linear-to-t from-background via-background/50 to-transparent dark:bg-black pt-13">
           <div className="w-full px-5 pt-5 pb-1 flex justify-center relative">
             <div className="max-w-5xl w-full">
-              {/* Suggestion banner (small) shown when chat is fresh */}
-              {!hasUserMessage && (
-                <div className="mb-3">
-                  <div className="max-w-5xl mx-auto">
-                    <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl border border-gray-200 bg-white/95 shadow-sm">
-                      <div>
-                        <div className="text-sm font-semibold text-gray-700">What can I fix today?</div>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            className="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
-                            onClick={() => sendMessage({ text: "Explain the P&ID overview document." })}
-                          >
-                            Explain P&ID
-                          </button>
-
-                          <button
-                            type="button"
-                            className="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
-                            onClick={() => sendMessage({ text: "Provide SOP guidance for key equipment." })}
-                          >
-                            Generate SOP
-                          </button>
-
-                          <button
-                            type="button"
-                            className="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
-                            onClick={() => sendMessage({ text: "Summarize an incident and list root causes." })}
-                          >
-                            Safety Analysis
-                          </button>
-                        </div>
-                      </div>
-                      <div className="text-xs text-muted-foreground">Click a suggestion to begin</div>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               <form id="chat-form" onSubmit={form.handleSubmit(onSubmit)}>
                 <FieldGroup>
@@ -263,11 +211,11 @@ export default function Chat() {
                         <FieldLabel className="sr-only">Message</FieldLabel>
 
                         <div className="relative h-13">
+
                           {/* FILE UPLOAD */}
                           <label
                             htmlFor="file-upload"
                             className="absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer p-1 rounded-full hover:bg-gray-200/30 z-10"
-                            title="Upload a file"
                           >
                             <Paperclip className="w-5 h-5 text-gray-600" />
                           </label>
@@ -295,7 +243,7 @@ export default function Chat() {
                                     fileName: file.name,
                                     fileType: file.type,
                                     fileSize: file.size,
-                                    fileContent: reader.result as string,
+                                    fileContent: reader.result,
                                   },
                                 });
                               };
@@ -318,7 +266,7 @@ export default function Chat() {
                             }}
                           />
 
-                          {/* SEND / STOP BUTTONS */}
+                          {/* SEND / STOP BUTTON */}
                           {status === "ready" || status === "error" ? (
                             <Button
                               type="submit"
