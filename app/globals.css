@@ -146,16 +146,18 @@
   }
 }
 
-/* === Quick Action Button Styles === */
-.quick-tile {
-  @apply flex flex-col items-center justify-center bg-white border border-gray-300 
-         rounded-md w-20 h-20 hover:bg-gray-100 transition shadow-sm;
-}
+/* === Quick Action Button Styles (Tailwind @apply inside components layer) === */
+@layer components {
+  .quick-tile {
+    @apply flex flex-col items-center justify-center bg-white border border-gray-300
+           rounded-md w-20 h-20 hover:bg-gray-100 transition shadow-sm;
+  }
 
-.quick-icon {
-  @apply text-3xl;
-}
+  .quick-icon {
+    @apply text-3xl;
+  }
 
-.quick-label {
-  @apply text-xs mt-1 text-center text-gray-700;
+  .quick-label {
+    @apply text-xs mt-1 text-center text-gray-700;
+  }
 }
