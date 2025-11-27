@@ -23,6 +23,7 @@ import { AI_NAME, CLEAR_CHAT_TEXT, OWNER_NAME, WELCOME_MESSAGE } from "@/config"
 import Image from "next/image";
 import Link from "next/link";
 
+/// QuickSidebar import (adjust if yours is in a different location)
 import QuickSidebar from "@/app/QuickSidebar";
 
 /* -------------------- Zod Schema -------------------- */
@@ -34,31 +35,38 @@ const formSchema = z.object({
     .max(2000, "Message must be at most 2000 characters."),
 });
 
-/* -------------------- Local Storage -------------------- */
+/* -------------------- Local Storage Types & Helpers -------------------- */
+
+type StorageData = {
+  messages: UIMessage[];
+  durations: Record<string, number>;
+};
 
 const STORAGE_KEY = "chat-messages";
 
-const loadMessagesFromStorage = () => {
+const loadMessagesFromStorage = (): StorageData => {
   if (typeof window === "undefined") return { messages: [], durations: {} };
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return { messages: [], durations: {} };
-    return JSON.parse(stored);
-  } catch {
+    const parsed = JSON.parse(stored) as StorageData;
+    return {
+      messages: parsed.messages || [],
+      durations: parsed.durations || {},
+    };
+  } catch (error) {
+    console.error("Failed to load messages from localStorage:", error);
     return { messages: [], durations: {} };
   }
 };
 
-const saveMessagesToStorage = (
-  messages: UIMessage[],
-  durations: Record<string, number>
-): void => {
-  if (typeof window === 'undefined') return;
+const saveMessagesToStorage = (messages: UIMessage[], durations: Record<string, number>): void => {
+  if (typeof window === "undefined") return;
   try {
     const data: StorageData = { messages, durations };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (error) {
-    console.error('Failed to save messages to localStorage:', error);
+    console.error("Failed to save messages to localStorage:", error);
   }
 };
 
@@ -66,15 +74,11 @@ const saveMessagesToStorage = (
 
 export default function Chat() {
   const [isClient, setIsClient] = useState(false);
-  const [durations, setDurations] = useState({});
+  const [durations, setDurations] = useState<Record<string, number>>({});
   const welcomeMessageShownRef = useRef(false);
 
-  const stored =
-    typeof window !== "undefined"
-      ? loadMessagesFromStorage()
-      : { messages: [], durations: {} };
-
-  const [initialMessages] = useState(stored.messages);
+  const stored = typeof window !== "undefined" ? loadMessagesFromStorage() : { messages: [], durations: {} };
+  const [initialMessages] = useState<UIMessage[]>(stored.messages);
 
   const { messages, sendMessage, status, stop, setMessages } = useChat({
     messages: initialMessages,
@@ -84,24 +88,24 @@ export default function Chat() {
     setIsClient(true);
     setDurations(stored.durations);
     setMessages(stored.messages);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (isClient) saveMessagesToStorage(messages, durations);
-  }, [messages, durations, isClient]);
+    if (isClient) {
+      saveMessagesToStorage(messages, durations);
+    }
+  }, [durations, messages, isClient]);
 
-  const handleDurationChange = (key, duration) => {
+  const handleDurationChange = (key: string, duration: number) => {
     setDurations((prev) => ({ ...prev, [key]: duration }));
   };
 
-  /* ------ Welcome message injection ------ */
+  /* ------ Welcome Message Injection ------ */
+
   useEffect(() => {
-    if (
-      isClient &&
-      initialMessages.length === 0 &&
-      !welcomeMessageShownRef.current
-    ) {
-      const welcome = {
+    if (isClient && initialMessages.length === 0 && !welcomeMessageShownRef.current) {
+      const welcome: UIMessage = {
         id: `welcome-${Date.now()}`,
         role: "assistant",
         parts: [{ type: "text", text: WELCOME_MESSAGE }],
@@ -119,7 +123,7 @@ export default function Chat() {
     defaultValues: { message: "" },
   });
 
-  function onSubmit(data) {
+  function onSubmit(data: any) {
     sendMessage({ text: data.message });
     form.reset();
   }
@@ -131,20 +135,21 @@ export default function Chat() {
     toast.success("Chat cleared");
   }
 
-  /* -------- Hero state (only title) -------- */
+  /* -------- Quick Action Handler -------- */
 
-  const hasUserMessage = messages.some((m) => m.role === "user");
-  const showHero = !hasUserMessage;
+  function handleQuickAction(text: string) {
+    sendMessage({ text });
+  }
 
   /* -------------------- UI Layout -------------------- */
 
   return (
     <div className="flex h-screen font-sans dark:bg-black">
+      {/* LEFT SIDEBAR */}
+      <QuickSidebar onAction={handleQuickAction} />
 
-      <QuickSidebar onAction={(t) => sendMessage({ text: t })} />
-
+      {/* MAIN CHAT */}
       <main className="flex-1 ml-28 relative min-h-screen flex flex-col">
-
         {/* HEADER */}
         <div className="fixed top-0 left-28 right-0 z-50 bg-linear-to-b from-background via-background/50 to-transparent dark:bg-black pb-16">
           <ChatHeader>
@@ -161,11 +166,7 @@ export default function Chat() {
             </ChatHeaderBlock>
 
             <ChatHeaderBlock className="justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={clearChat}
-              >
+              <Button variant="outline" size="sm" className="cursor-pointer" onClick={clearChat}>
                 <Plus className="size-4" />
                 {CLEAR_CHAT_TEXT}
               </Button>
@@ -173,17 +174,17 @@ export default function Chat() {
           </ChatHeader>
         </div>
 
-        {/* ===== HERO (ONLY THE TITLE) ===== */}
-        {showHero && (
-          <div className="pt-[160px] pb-6 text-center">
-            <h1 className="text-4xl md:text-5xl font-semibold text-gray-900">
+        {/* ===== Simple Bold Heading ONLY (no hero input) ===== */}
+        <div className="pt-[120px] pb-6">
+          <div className="max-w-4xl mx-auto px-6">
+            <h1 className="text-4xl md:text-5xl font-bold text-center mb-2 text-gray-900">
               What’s on your mind today?
             </h1>
           </div>
-        )}
+        </div>
 
-        {/* ===== Messages Area ===== */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 w-full pt-[88px] pb-[150px]">
+        {/* ===== Messages area (chat) ===== */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 w-full pt-[8px] pb-[150px]">
           <div className="flex flex-col items-center justify-end min-h-full">
             {isClient ? (
               <>
@@ -195,19 +196,24 @@ export default function Chat() {
                 />
 
                 {status === "submitted" && (
-                  <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                  <div className="flex justify-start max-w-3xl w-full">
+                    <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                  </div>
                 )}
               </>
             ) : (
-              <Loader2 className="size-4 animate-spin text-muted-foreground" />
+              <div className="flex justify-center max-w-2xl w-full">
+                <Loader2 className="size-4 animate-spin text-muted-foreground" />
+              </div>
             )}
           </div>
         </div>
 
-        {/* ===== Input Bar ===== */}
+        {/* INPUT BAR */}
         <div className="fixed bottom-0 left-28 right-0 z-50 bg-linear-to-t from-background via-background/50 to-transparent dark:bg-black pt-13">
           <div className="w-full px-5 pt-5 pb-1 flex justify-center relative">
             <div className="max-w-5xl w-full">
+              {/* NOTE: removed the "What can I fix today?" suggestion box as requested */}
 
               <form id="chat-form" onSubmit={form.handleSubmit(onSubmit)}>
                 <FieldGroup>
@@ -219,11 +225,11 @@ export default function Chat() {
                         <FieldLabel className="sr-only">Message</FieldLabel>
 
                         <div className="relative h-13">
-
                           {/* FILE UPLOAD */}
                           <label
                             htmlFor="file-upload"
                             className="absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer p-1 rounded-full hover:bg-gray-200/30 z-10"
+                            title="Upload a file"
                           >
                             <Paperclip className="w-5 h-5 text-gray-600" />
                           </label>
@@ -251,7 +257,7 @@ export default function Chat() {
                                     fileName: file.name,
                                     fileType: file.type,
                                     fileSize: file.size,
-                                    fileContent: reader.result,
+                                    fileContent: reader.result as string,
                                   },
                                 });
                               };
@@ -262,8 +268,10 @@ export default function Chat() {
                           {/* TEXT INPUT */}
                           <Input
                             {...field}
-                            className="h-13 pr-15 pl-14 rounded-[20px] bg-[#e1e8f7] text-black placeholder-white/60
-                                       border border-[#0A3D91] focus:outline-none focus:ring-2 focus:ring-blue-300/40 shadow-sm"
+                            className={
+                              "h-13 pr-15 pl-14 rounded-[20px] bg-[#e1e8f7] text-black placeholder-white/60 " +
+                              "border border-[#0A3D91] focus:outline-none focus:ring-2 focus:ring-blue-300/40 shadow-sm"
+                            }
                             placeholder="Type your message here..."
                             disabled={status === "streaming"}
                             onKeyDown={(e) => {
@@ -274,8 +282,8 @@ export default function Chat() {
                             }}
                           />
 
-                          {/* SEND / STOP BUTTON */}
-                          {status === "ready" || status === "error" ? (
+                          {/* SEND / STOP BUTTONS */}
+                          {(status === "ready" || status === "error") && (
                             <Button
                               type="submit"
                               size="icon"
@@ -284,7 +292,9 @@ export default function Chat() {
                             >
                               <ArrowUp className="size-4" />
                             </Button>
-                          ) : (
+                          )}
+
+                          {(status === "streaming" || status === "submitted") && (
                             <Button
                               size="icon"
                               onClick={() => stop()}
@@ -303,9 +313,15 @@ export default function Chat() {
           </div>
 
           <div className="w-full px-5 py-3 flex justify-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} {OWNER_NAME}&nbsp;
-            <Link href="/terms" className="underline">Terms of Use</Link>&nbsp;
-            Powered by <Link href="https://ringel.ai/" className="underline">Ringel.AI</Link>
+            © {new Date().getFullYear()} {OWNER_NAME}
+            &nbsp;
+            <Link href="/terms" className="underline">
+              Terms of Use
+            </Link>
+            &nbsp;Powered by&nbsp;
+            <Link href="https://ringel.ai/" className="underline">
+              Ringel.AI
+            </Link>
           </div>
         </div>
       </main>
