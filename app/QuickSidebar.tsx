@@ -8,6 +8,11 @@ export default function QuickSidebar() {
       <h2 className="text-xs font-semibold uppercase text-gray-600 tracking-wide">
       </h2>
 
+      {/* Quick Tools */}
+      <div className="text-xs font-semibold text-gray-500 tracking-wide text-center px-2">
+        QUICK <br /> TOOLS
+      </div>
+
       {/* Steam Tables */}
       <a
         href="https://pages.mtu.edu/~tbco/cm3230/steamtables.pdf"  // ⬅️ your link here
