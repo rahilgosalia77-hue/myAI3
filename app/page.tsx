@@ -157,7 +157,7 @@ export default function Chat() {
   return (
     <div className="flex h-screen font-sans dark:bg-black">
       {/* LEFT SIDEBAR */}
-      <QuickSidebar onAction={handleQuickAction} />
+      <QuickSidebar />
 
       {/* MAIN CHAT */}
       <main className="flex-1 ml-28 relative min-h-screen flex flex-col">
