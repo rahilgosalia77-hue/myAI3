@@ -167,7 +167,7 @@ export default function Chat() {
             <ChatHeaderBlock />
 
             <ChatHeaderBlock className="justify-center items-center">
-              <Avatar className="w-10 h-10 rounded-full object-cover shadow-sm flex-shrink-0">
+              <Avatar className="w-12 h-12 rounded-full object-cover shadow-sm flex-shrink-0">
                 <AvatarImage src="/logo.png" />
                 <AvatarFallback>
                   <Image src="/logo.png" alt="Logo" width={36} height={36} />
