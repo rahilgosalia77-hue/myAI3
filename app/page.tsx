@@ -167,14 +167,19 @@ export default function Chat() {
             <ChatHeaderBlock />
 
             <ChatHeaderBlock className="justify-center items-center">
-              <Avatar className="w-10 h-10 rounded-full object-cover shadow-sm flex-shrink-0">
-                <AvatarImage src="/logo.png" />
-                <AvatarFallback>
-                  <Image src="/logo.png" alt="Logo" width={36} height={36} />
-                </AvatarFallback>
-              </Avatar>
-              <p className="tracking-tight">Chat with {AI_NAME}</p>
-            </ChatHeaderBlock>
+  <Avatar className="h-10 w-10 ring-1 ring-primary rounded-full overflow-hidden">
+    <AvatarImage
+      src="/logo.png"
+      className="object-cover w-full h-full"
+      alt="Logo"
+    />
+    <AvatarFallback>
+      <Image src="/logo.png" alt="Logo" width={40} height={40} />
+    </AvatarFallback>
+  </Avatar>
+
+  <p className="tracking-tight ml-2">Chat with {AI_NAME}</p>
+</ChatHeaderBlock>
 
             <ChatHeaderBlock className="justify-end">
               <Button
