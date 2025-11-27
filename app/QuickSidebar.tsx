@@ -1,47 +1,51 @@
-'use client';
+"use client";
 
 import React from "react";
 
-type Props = {
-  onAction: (text: string) => void;
-};
-
-export default function QuickSidebar({ onAction }: Props) {
+export default function QuickSidebar() {
   return (
     <aside className="w-28 bg-gray-50 border-r border-gray-200 p-4 flex flex-col items-center gap-6 fixed left-0 top-0 h-screen pt-28 z-40">
       <h2 className="text-xs font-semibold uppercase text-gray-600 tracking-wide">
-        Quick Actions
       </h2>
 
-      <button
+      {/* Steam Tables */}
+      <a
+        href="https://pages.mtu.edu/~tbco/cm3230/steamtables.pdf"  // ⬅️ your link here
+        target="_blank"
+        rel="noopener noreferrer"
         className="quick-tile"
-        onClick={() => onAction("Summarize the P&ID Overview Document.")}
-        aria-label="P&ID Overview"
-        title="P&ID Overview"
+        title="Steam Tables"
+        aria-label="Steam Tables"
       >
-        <span className="quick-icon" aria-hidden>📘</span>
-        <span className="quick-label">P&ID</span>
-      </button>
+        <span className="quick-icon" aria-hidden>💧</span>
+        <span className="quick-label">Steam Tables</span>
+      </a>
 
-      <button
+      {/* ChemEng Toolbox */}
+      <a
+        href="https://www.engineeringtoolbox.com/" // ⬅️ your link here
+        target="_blank"
+        rel="noopener noreferrer"
         className="quick-tile"
-        onClick={() => onAction("Summarize the SOP Handbook Document.")}
-        aria-label="SOP Handbook"
-        title="SOP Handbook"
+        title="ChemEng Toolbox"
+        aria-label="ChemEng Toolbox"
       >
         <span className="quick-icon" aria-hidden>🧰</span>
-        <span className="quick-label">SOP</span>
-      </button>
+        <span className="quick-label">Toolbox</span>
+      </a>
 
-      <button
+      {/* Materials Safety */}
+      <a
+        href="https://pubchem.ncbi.nlm.nih.gov/" // ⬅️ your link here
+        target="_blank"
+        rel="noopener noreferrer"
         className="quick-tile"
-        onClick={() => onAction("Summarize the Incident Case Studies Document.")}
-        aria-label="Incident Case Studies"
-        title="Incident Case Studies"
+        title="Material Safety Data"
+        aria-label="Material Safety"
       >
         <span className="quick-icon" aria-hidden>⚠️</span>
-        <span className="quick-label">Incidents</span>
-      </button>
+        <span className="quick-label">Material Safety</span>
+      </a>
     </aside>
   );
 }
