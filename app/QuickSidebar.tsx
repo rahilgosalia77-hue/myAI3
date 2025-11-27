@@ -5,7 +5,7 @@ import React from "react";
 export default function QuickSidebar() {
   return (
     <aside className="w-28 bg-gray-50 border-r border-gray-200 p-4 flex flex-col items-center gap-6 fixed left-0 top-0 h-screen pt-28 z-40">
-      <h2 className="text-xs font-semibold uppercase text-gray-600 tracking-wide">
+      <h2 className="text-xs font-semibold uppercase text-gray-600 tracking-wide underline decoration-gray-400 underline-offset-4">
       </h2>
 
       {/* Quick Tools */}
@@ -13,8 +13,7 @@ export default function QuickSidebar() {
         QUICK <br /> TOOLS
       </div>
 
-      {/* Steam 
-      Tables */}
+      {/* Steam   Tables */}
       <a
         href="https://pages.mtu.edu/~tbco/cm3230/steamtables.pdf"  // ⬅️ your link here
         target="_blank"
