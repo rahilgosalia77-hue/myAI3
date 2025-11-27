@@ -35,39 +35,30 @@ const formSchema = z.object({
     .max(2000, "Message must be at most 2000 characters."),
 });
 
-/* -------------------- Local Storage Types & Helpers -------------------- */
+/* -------------------- Local Storage -------------------- */
+
+const STORAGE_KEY = "chat-messages";
 
 type StorageData = {
   messages: UIMessage[];
   durations: Record<string, number>;
 };
 
-const STORAGE_KEY = "chat-messages";
-
-const loadMessagesFromStorage = (): StorageData => {
+const loadMessagesFromStorage = () => {
   if (typeof window === "undefined") return { messages: [], durations: {} };
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return { messages: [], durations: {} };
-    const parsed = JSON.parse(stored) as StorageData;
-    return {
-      messages: parsed.messages || [],
-      durations: parsed.durations || {},
-    };
-  } catch (error) {
-    console.error("Failed to load messages from localStorage:", error);
+    return JSON.parse(stored);
+  } catch {
     return { messages: [], durations: {} };
   }
 };
 
-const saveMessagesToStorage = (messages: UIMessage[], durations: Record<string, number>): void => {
+const saveMessagesToStorage = (messages: UIMessage[], durations: Record<string, number>) => {
   if (typeof window === "undefined") return;
-  try {
-    const data: StorageData = { messages, durations };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (error) {
-    console.error("Failed to save messages to localStorage:", error);
-  }
+  const data: StorageData = { messages, durations };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 };
 
 /* -------------------- Chat Component -------------------- */
@@ -76,6 +67,10 @@ export default function Chat() {
   const [isClient, setIsClient] = useState(false);
   const [durations, setDurations] = useState<Record<string, number>>({});
   const welcomeMessageShownRef = useRef(false);
+
+  // Track whether the user has initiated the first (user) message locally.
+  // This ensures the hero disappears immediately when the user sends something.
+  const [hasSentFirstMessage, setHasSentFirstMessage] = useState(false);
 
   const stored = typeof window !== "undefined" ? loadMessagesFromStorage() : { messages: [], durations: {} };
   const [initialMessages] = useState<UIMessage[]>(stored.messages);
@@ -88,17 +83,14 @@ export default function Chat() {
     setIsClient(true);
     setDurations(stored.durations);
     setMessages(stored.messages);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (isClient) {
-      saveMessagesToStorage(messages, durations);
-    }
-  }, [durations, messages, isClient]);
+    if (isClient) saveMessagesToStorage(messages, durations);
+  }, [messages, durations, isClient]);
 
   const handleDurationChange = (key: string, duration: number) => {
-    setDurations((prev) => ({ ...prev, [key]: duration }));
+    setDurations(prev => ({ ...prev, [key]: duration }));
   };
 
   /* ------ Welcome Message Injection ------ */
@@ -124,7 +116,11 @@ export default function Chat() {
   });
 
   function onSubmit(data: any) {
-    sendMessage({ text: data.message });
+    const text = data.message?.trim();
+    if (!text) return;
+    // Immediately mark that the user has sent a message (hero hides right away)
+    setHasSentFirstMessage(true);
+    sendMessage({ text });
     form.reset();
   }
 
@@ -132,24 +128,45 @@ export default function Chat() {
     setMessages([]);
     setDurations({});
     saveMessagesToStorage([], {});
+    setHasSentFirstMessage(false); // if you want hero back when clearing chat
     toast.success("Chat cleared");
   }
 
   /* -------- Quick Action Handler -------- */
 
   function handleQuickAction(text: string) {
+    // mark first message sent so hero hides immediately
+    setHasSentFirstMessage(true);
     sendMessage({ text });
+  }
+
+  /* ---------- Hero (centered) state ---------- */
+  // show hero when there is no user message yet AND user hasn't locally sent anything
+  const hasUserMessage = messages.some((m) => m.role === "user");
+  const showHero = !hasUserMessage && !hasSentFirstMessage;
+
+  // local hero input state
+  const [heroInput, setHeroInput] = useState("");
+
+  function submitHeroInput() {
+    const t = heroInput.trim();
+    if (!t) return;
+    setHasSentFirstMessage(true);
+    sendMessage({ text: t });
+    setHeroInput("");
   }
 
   /* -------------------- UI Layout -------------------- */
 
   return (
     <div className="flex h-screen font-sans dark:bg-black">
+
       {/* LEFT SIDEBAR */}
       <QuickSidebar onAction={handleQuickAction} />
 
       {/* MAIN CHAT */}
       <main className="flex-1 ml-28 relative min-h-screen flex flex-col">
+
         {/* HEADER */}
         <div className="fixed top-0 left-28 right-0 z-50 bg-linear-to-b from-background via-background/50 to-transparent dark:bg-black pb-16">
           <ChatHeader>
@@ -166,7 +183,12 @@ export default function Chat() {
             </ChatHeaderBlock>
 
             <ChatHeaderBlock className="justify-end">
-              <Button variant="outline" size="sm" className="cursor-pointer" onClick={clearChat}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="cursor-pointer"
+                onClick={clearChat}
+              >
                 <Plus className="size-4" />
                 {CLEAR_CHAT_TEXT}
               </Button>
@@ -174,17 +196,95 @@ export default function Chat() {
           </ChatHeader>
         </div>
 
-        {/* ===== Simple Bold Heading ONLY (no hero input) ===== */}
-        <div className="pt-[120px] pb-6">
-          <div className="max-w-4xl mx-auto px-6">
-            <h1 className="text-4xl md:text-5xl font-bold text-center mb-2 text-gray-900">
-              What’s on your mind today?
-            </h1>
-          </div>
-        </div>
+        {/* ===== HERO (centered prompt) ===== */}
+        {showHero && (
+          <div className="flex-1 pt-[120px] pb-6">
+            <div className="max-w-4xl mx-auto px-6">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-center mb-8 text-gray-900">
+                What’s on your mind today?
+              </h1>
 
-        {/* ===== Messages area (chat) ===== */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 w-full pt-[8px] pb-[150px]">
+              <div className="flex items-center justify-center">
+                <div className="w-full">
+                  {/* Big rounded input — when submitted, sends message */}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      submitHeroInput();
+                    }}
+                  >
+                    <div className="flex items-center bg-white border border-gray-200 rounded-full shadow-sm px-4 py-3">
+                      <button
+                        type="button"
+                        className="mr-4 text-xl text-gray-500"
+                        aria-hidden
+                      >
+                        +
+                      </button>
+
+                      <input
+                        value={heroInput}
+                        onChange={(e) => setHeroInput(e.target.value)}
+                        placeholder="Ask anything"
+                        className="flex-1 text-lg md:text-xl placeholder-gray-400 focus:outline-none"
+                        aria-label="Hero query"
+                      />
+
+                      <button
+                        type="submit"
+                        className="ml-4 rounded-full bg-black text-white w-12 h-12 flex items-center justify-center hover:opacity-95"
+                        title="Ask"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                          <path d="M4 12l16-8v16z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </form>
+
+                  {/* suggestion chips below the hero input */}
+                  <div className="mt-4 flex items-center justify-center gap-3 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHasSentFirstMessage(true);
+                        sendMessage({ text: "Explain the P&ID overview document and identify key equipment." });
+                      }}
+                      className="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
+                    >
+                      Explain P&ID
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHasSentFirstMessage(true);
+                        sendMessage({ text: "Generate a concise SOP for the main equipment." });
+                      }}
+                      className="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
+                    >
+                      Generate SOP
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHasSentFirstMessage(true);
+                        sendMessage({ text: "Summarize an incident and list root causes." });
+                      }}
+                      className="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
+                    >
+                      Safety Analysis
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===== Messages area (below hero or if hero hidden) ===== */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 w-full pt-[88px] pb-[150px]">
           <div className="flex flex-col items-center justify-end min-h-full">
             {isClient ? (
               <>
@@ -213,7 +313,9 @@ export default function Chat() {
         <div className="fixed bottom-0 left-28 right-0 z-50 bg-linear-to-t from-background via-background/50 to-transparent dark:bg-black pt-13">
           <div className="w-full px-5 pt-5 pb-1 flex justify-center relative">
             <div className="max-w-5xl w-full">
-              {/* NOTE: removed the "What can I fix today?" suggestion box as requested */}
+
+              {/* NOTE: I removed the small "What can I fix today?" box here per your request.
+                  If you want it back, we can add it but hide it when the hero is present. */}
 
               <form id="chat-form" onSubmit={form.handleSubmit(onSubmit)}>
                 <FieldGroup>
@@ -251,6 +353,8 @@ export default function Chat() {
 
                               const reader = new FileReader();
                               reader.onload = () => {
+                                // mark as sent, hide hero immediately
+                                setHasSentFirstMessage(true);
                                 sendMessage({
                                   text: `I uploaded a file named "${file.name}". Please analyze it.`,
                                   metadata: {
@@ -268,10 +372,8 @@ export default function Chat() {
                           {/* TEXT INPUT */}
                           <Input
                             {...field}
-                            className={
-                              "h-13 pr-15 pl-14 rounded-[20px] bg-[#e1e8f7] text-black placeholder-white/60 " +
-                              "border border-[#0A3D91] focus:outline-none focus:ring-2 focus:ring-blue-300/40 shadow-sm"
-                            }
+                            className="h-13 pr-15 pl-14 rounded-[20px] bg-[#e1e8f7] text-black placeholder-white/60
+                                       border border-[#0A3D91] focus:outline-none focus:ring-2 focus:ring-blue-300/40 shadow-sm"
                             placeholder="Type your message here..."
                             disabled={status === "streaming"}
                             onKeyDown={(e) => {
@@ -283,7 +385,7 @@ export default function Chat() {
                           />
 
                           {/* SEND / STOP BUTTONS */}
-                          {(status === "ready" || status === "error") && (
+                          {status === "ready" || status === "error" ? (
                             <Button
                               type="submit"
                               size="icon"
@@ -292,9 +394,7 @@ export default function Chat() {
                             >
                               <ArrowUp className="size-4" />
                             </Button>
-                          )}
-
-                          {(status === "streaming" || status === "submitted") && (
+                          ) : (
                             <Button
                               size="icon"
                               onClick={() => stop()}
@@ -313,15 +413,9 @@ export default function Chat() {
           </div>
 
           <div className="w-full px-5 py-3 flex justify-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} {OWNER_NAME}
-            &nbsp;
-            <Link href="/terms" className="underline">
-              Terms of Use
-            </Link>
-            &nbsp;Powered by&nbsp;
-            <Link href="https://ringel.ai/" className="underline">
-              Ringel.AI
-            </Link>
+            © {new Date().getFullYear()} {OWNER_NAME}&nbsp;
+            <Link href="/terms" className="underline">Terms of Use</Link>&nbsp;
+            Powered by <Link href="https://ringel.ai/" className="underline">Ringel.AI</Link>
           </div>
         </div>
       </main>
