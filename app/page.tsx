@@ -195,7 +195,7 @@ export default function Chat() {
           <div className="pt-[120px] pb-6">
             <div className="max-w-4xl mx-auto px-6">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-center mb-8 text-gray-900">
-                What’s on your mind today?
+                What can I fix for you today?
               </h1>
             </div>
           </div>
