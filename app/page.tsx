@@ -7,18 +7,14 @@ import { toast } from "sonner";
 import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useChat } from "@ai-sdk/react";
 
 import { ArrowUp, Loader2, Plus, Square } from "lucide-react";
 import { MessageWall } from "@/components/messages/message-wall";
-import { ChatHeader } from "@/app/parts/chat-header";
-import { ChatHeaderBlock } from "@/app/parts/chat-header";
+import { ChatHeader, ChatHeaderBlock } from "@/app/parts/chat-header";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UIMessage } from "ai";
 
@@ -27,11 +23,11 @@ import { AI_NAME, CLEAR_CHAT_TEXT, OWNER_NAME, WELCOME_MESSAGE } from "@/config"
 import Image from "next/image";
 import Link from "next/link";
 
-/// ⭐ CORRECT IMPORT — your QuickSidebar lives in app/QuickSidebar.tsx
+/// ⭐ Correct import — matches your file location
 import QuickSidebar from "@/app/QuickSidebar";
 
 
-/* ------------------------------- validation ------------------------------ */
+/* -------------------- Zod Schema -------------------- */
 
 const formSchema = z.object({
   message: z
@@ -40,6 +36,9 @@ const formSchema = z.object({
     .max(2000, "Message must be at most 2000 characters."),
 });
 
+
+/* -------------------- Local Storage -------------------- */
+
 const STORAGE_KEY = 'chat-messages';
 
 type StorageData = {
@@ -47,45 +46,31 @@ type StorageData = {
   durations: Record<string, number>;
 };
 
-
-/* ------------------------------ local storage ----------------------------- */
-
-const loadMessagesFromStorage = (): { messages: UIMessage[]; durations: Record<string, number> } => {
-  if (typeof window === 'undefined') return { messages: [], durations: {} };
+const loadMessagesFromStorage = () => {
+  if (typeof window === "undefined") return { messages: [], durations: {} };
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return { messages: [], durations: {} };
-
-    const parsed = JSON.parse(stored);
-    return {
-      messages: parsed.messages || [],
-      durations: parsed.durations || {},
-    };
-  } catch (error) {
-    console.error('Failed to load messages from localStorage:', error);
+    return JSON.parse(stored);
+  } catch {
     return { messages: [], durations: {} };
   }
 };
 
 const saveMessagesToStorage = (messages: UIMessage[], durations: Record<string, number>) => {
-  if (typeof window === 'undefined') return;
-  try {
-    const data: StorageData = { messages, durations };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (error) {
-    console.error('Failed to save messages to localStorage:', error);
-  }
+  if (typeof window === "undefined") return;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ messages, durations }));
 };
 
 
-/* --------------------------------- page ---------------------------------- */
+/* -------------------- Chat Component -------------------- */
 
 export default function Chat() {
   const [isClient, setIsClient] = useState(false);
   const [durations, setDurations] = useState<Record<string, number>>({});
-  const welcomeMessageShownRef = useRef<boolean>(false);
+  const welcomeMessageShownRef = useRef(false);
 
-  const stored = typeof window !== 'undefined' ? loadMessagesFromStorage() : { messages: [], durations: {} };
+  const stored = typeof window !== "undefined" ? loadMessagesFromStorage() : { messages: [], durations: {} };
   const [initialMessages] = useState<UIMessage[]>(stored.messages);
 
   const { messages, sendMessage, status, stop, setMessages } = useChat({
@@ -99,87 +84,76 @@ export default function Chat() {
   }, []);
 
   useEffect(() => {
-    if (isClient) {
-      saveMessagesToStorage(messages, durations);
-    }
-  }, [durations, messages, isClient]);
-
+    if (isClient) saveMessagesToStorage(messages, durations);
+  }, [messages, durations, isClient]);
 
   const handleDurationChange = (key: string, duration: number) => {
-    setDurations((prevDurations) => {
-      const newDurations = { ...prevDurations };
-      newDurations[key] = duration;
-      return newDurations;
-    });
+    setDurations(prev => ({ ...prev, [key]: duration }));
   };
 
 
-  /* --------------------------- welcome message --------------------------- */
+  /* ------ Welcome Message Injection ------ */
 
   useEffect(() => {
-    if (isClient && initialMessages.length === 0 && !welcomeMessageShownRef.current) {
-      const welcomeMessage: UIMessage = {
+    if (
+      isClient &&
+      initialMessages.length === 0 &&
+      !welcomeMessageShownRef.current
+    ) {
+      const welcome: UIMessage = {
         id: `welcome-${Date.now()}`,
         role: "assistant",
-        parts: [
-          {
-            type: "text",
-            text: WELCOME_MESSAGE,
-          },
-        ],
+        parts: [{ type: "text", text: WELCOME_MESSAGE }],
       };
-      setMessages([welcomeMessage]);
-      saveMessagesToStorage([welcomeMessage], {});
+      setMessages([welcome]);
+      saveMessagesToStorage([welcome], {});
       welcomeMessageShownRef.current = true;
     }
   }, [isClient, initialMessages.length, setMessages]);
 
 
-  /* ------------------------------- form --------------------------------- */
+  /* -------- Form Handling -------- */
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      message: "",
-    },
+    defaultValues: { message: "" },
   });
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
+  function onSubmit(data: any) {
     sendMessage({ text: data.message });
     form.reset();
   }
 
   function clearChat() {
-    const newMessages: UIMessage[] = [];
-    const newDurations = {};
-    setMessages(newMessages);
-    setDurations(newDurations);
-    saveMessagesToStorage(newMessages, newDurations);
+    setMessages([]);
+    setDurations({});
+    saveMessagesToStorage([], {});
     toast.success("Chat cleared");
   }
 
+  /* -------- Quick Action Handler -------- */
 
-  /* ------------------------ Quick Action Handler ------------------------ */
   function handleQuickAction(text: string) {
     sendMessage({ text });
   }
 
 
-  /* ----------------------------- UI Layout ------------------------------ */
+  /* -------------------- UI Layout -------------------- */
 
   return (
     <div className="flex h-screen font-sans dark:bg-black">
 
-      {/* ⭐ LEFT SIDEBAR */}
+      {/* LEFT SIDEBAR */}
       <QuickSidebar onAction={handleQuickAction} />
 
-      {/* ⭐ MAIN CHAT AREA (shifted right by ml-28 so sidebar doesn't overlap) */}
+      {/* MAIN CHAT */}
       <main className="flex-1 ml-28 relative">
 
-        {/* Header */}
+        {/* HEADER */}
         <div className="fixed top-0 left-28 right-0 z-50 bg-linear-to-b from-background via-background/50 to-transparent dark:bg-black pb-16">
           <ChatHeader>
             <ChatHeaderBlock />
+
             <ChatHeaderBlock className="justify-center items-center">
               <Avatar className="size-8 ring-1 ring-primary">
                 <AvatarImage src="/logo.png" />
@@ -189,6 +163,7 @@ export default function Chat() {
               </Avatar>
               <p className="tracking-tight">Chat with {AI_NAME}</p>
             </ChatHeaderBlock>
+
             <ChatHeaderBlock className="justify-end">
               <Button
                 variant="outline"
@@ -200,12 +175,15 @@ export default function Chat() {
                 {CLEAR_CHAT_TEXT}
               </Button>
             </ChatHeaderBlock>
+
           </ChatHeader>
         </div>
 
-        {/* Messages */}
+
+        {/* MESSAGES */}
         <div className="h-screen overflow-y-auto px-5 py-4 w-full pt-[88px] pb-[150px]">
           <div className="flex flex-col items-center justify-end min-h-full">
+
             {isClient ? (
               <>
                 <MessageWall
@@ -220,20 +198,17 @@ export default function Chat() {
                     <Loader2 className="size-4 animate-spin text-muted-foreground" />
                   </div>
                 )}
-
               </>
             ) : (
-              <div className="flex justify-center max-w-2xl w-full">
-                <Loader2 className="size-4 animate-spin text-muted-foreground" />
-              </div>
+              <Loader2 className="size-4 animate-spin text-muted-foreground" />
             )}
           </div>
         </div>
 
-        {/* Chat Input Bar */}
+
+        {/* INPUT BAR */}
         <div className="fixed bottom-0 left-28 right-0 z-50 bg-linear-to-t from-background via-background/50 to-transparent dark:bg-black pt-13">
-          <div className="w-full px-5 pt-5 pb-1 items-center flex justify-center relative">
-            
+          <div className="w-full px-5 pt-5 pb-1 flex justify-center relative">
             <div className="max-w-5xl w-full">
               <form id="chat-form" onSubmit={form.handleSubmit(onSubmit)}>
                 <FieldGroup>
@@ -242,13 +217,11 @@ export default function Chat() {
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="chat-form-message" className="sr-only">
-                          Message
-                        </FieldLabel>
+                        <FieldLabel className="sr-only">Message</FieldLabel>
 
                         <div className="relative h-13">
 
-                          {/* File Upload */}
+                          {/* FILE UPLOAD */}
                           <label
                             htmlFor="file-upload"
                             className="absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer p-1 rounded-full hover:bg-gray-200/30 z-10"
@@ -274,48 +247,28 @@ export default function Chat() {
 
                               const reader = new FileReader();
                               reader.onload = () => {
-                                const base64 = reader.result as string;
-
                                 sendMessage({
                                   text: `I uploaded a file named "${file.name}". Please analyze it.`,
                                   metadata: {
                                     fileName: file.name,
                                     fileType: file.type,
                                     fileSize: file.size,
-                                    fileContent: base64,
+                                    fileContent: reader.result as string,
                                   },
                                 });
-
-                                toast.success(`Uploaded ${file.name}`);
-                                e.target.value = "";
                               };
-
-                              reader.onerror = () => {
-                                toast.error("Failed to read file.");
-                                e.target.value = "";
-                              };
-
                               reader.readAsDataURL(file);
                             }}
                           />
 
-                          {/* Text Input */}
+
+                          {/* TEXT INPUT */}
                           <Input
                             {...field}
-                            id="chat-form-message"
-                            className="h-13 pr-15 pl-14
-                              rounded-[20px]
-                              bg-[#e1e8f7]
-                              text-black
-                              placeholder-white/60
-                              border border-[#0A3D91]
-                              focus:outline-none
-                              focus:ring-2 focus:ring-blue-300/40
-                              shadow-sm"
+                            className="h-13 pr-15 pl-14 rounded-[20px] bg-[#e1e8f7] text-black placeholder-white/60
+                                       border border-[#0A3D91] focus:outline-none focus:ring-2 focus:ring-blue-300/40 shadow-sm"
                             placeholder="Type your message here..."
                             disabled={status === "streaming"}
-                            aria-invalid={fieldState.invalid}
-                            autoComplete="off"
                             onKeyDown={(e) => {
                               if (e.key === "Enter" && !e.shiftKey) {
                                 e.preventDefault();
@@ -324,27 +277,26 @@ export default function Chat() {
                             }}
                           />
 
-                          {/* Send / Stop Buttons */}
-                          {(status == "ready" || status == "error") && (
+                          {/* SEND / STOP BUTTONS */}
+                          {status === "ready" || status === "error" ? (
                             <Button
-                              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-[#0A3D91] text-white hover:bg-[#082b6f]"
                               type="submit"
-                              disabled={!field.value.trim()}
                               size="icon"
+                              disabled={!field.value.trim()}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-[#0A3D91] text-white hover:bg-[#082b6f]"
                             >
                               <ArrowUp className="size-4" />
                             </Button>
-                          )}
-
-                          {(status == "streaming" || status == "submitted") && (
+                          ) : (
                             <Button
-                              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full"
                               size="icon"
                               onClick={() => stop()}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full"
                             >
                               <Square className="size-4" />
                             </Button>
                           )}
+
                         </div>
                       </Field>
                     )}
@@ -357,10 +309,10 @@ export default function Chat() {
           <div className="w-full px-5 py-3 flex justify-center text-xs text-muted-foreground">
             © {new Date().getFullYear()} {OWNER_NAME}&nbsp;
             <Link href="/terms" className="underline">Terms of Use</Link>&nbsp;
-            Powered by&nbsp;
-            <Link href="https://ringel.ai/" className="underline">Ringel.AI</Link>
+            Powered by <Link href="https://ringel.ai/" className="underline">Ringel.AI</Link>
           </div>
         </div>
+
       </main>
     </div>
   );
