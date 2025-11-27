@@ -13,7 +13,8 @@ export default function QuickSidebar() {
         QUICK <br /> TOOLS
       </div>
 
-      {/* Steam Tables */}
+      {/* Steam 
+      Tables */}
       <a
         href="https://pages.mtu.edu/~tbco/cm3230/steamtables.pdf"  // ⬅️ your link here
         target="_blank"
